@@ -73,7 +73,7 @@ const loadArticles = async () => {
     populate: ['category', 'author', 'coverImage'],
     sort: sortBy.value,
     pagination: {
-      page: articlesStore.pagination.value?.page || 1,
+      page: articlesStore.pagination.page || 1,
       pageSize: 10,
     },
   }

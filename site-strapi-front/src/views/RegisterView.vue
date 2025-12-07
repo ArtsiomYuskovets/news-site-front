@@ -75,7 +75,6 @@ const handleSubmit = async () => {
     await authStore.register(form.value)
     router.push('/')
   } catch (error) {
-    // Ошибка уже обработана в store
   }
 }
 </script>

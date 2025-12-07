@@ -83,6 +83,22 @@
             {{ articlesStore.error }}
           </div>
 
+          <div v-if="isEdit && authStore.isEditor" class="publish-section">
+            <div class="publish-status">
+              <span v-if="isPublished" class="status-badge published">Опубликована</span>
+              <span v-else class="status-badge draft">Черновик</span>
+            </div>
+            <button
+              v-if="!isPublished"
+              type="button"
+              @click="handlePublish"
+              :disabled="articlesStore.isLoading"
+              class="btn-publish"
+            >
+              {{ articlesStore.isLoading ? 'Публикация...' : 'Опубликовать' }}
+            </button>
+          </div>
+
           <div class="form-actions">
             <RouterLink to="/" class="btn-cancel">Отмена</RouterLink>
             <button type="submit" :disabled="articlesStore.isLoading" class="btn-submit">
@@ -100,14 +116,21 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useArticlesStore } from '@/stores/articles'
 import { useCategoriesStore } from '@/stores/categories'
+import { useAuthStore } from '@/stores/auth'
 import AppLayout from '@/components/layouts/AppLayout.vue'
 
 const route = useRoute()
 const router = useRouter()
 const articlesStore = useArticlesStore()
 const categoriesStore = useCategoriesStore()
+const authStore = useAuthStore()
 
 const isEdit = computed(() => !!route.params.id)
+
+const isPublished = computed(() => {
+  const publishedAt = articlesStore.currentArticle?.publishedAt
+  return publishedAt !== null && publishedAt !== undefined && publishedAt !== ''
+})
 
 const form = ref({
   title: '',
@@ -142,7 +165,19 @@ const handleSubmit = async () => {
 
     router.push('/')
   } catch (error) {
-    // Ошибка уже обработана в store
+  }
+}
+
+const handlePublish = async () => {
+  if (!isEdit.value || !articlesStore.currentArticle) return
+  
+  try {
+    const publishedArticle = await articlesStore.publishArticle(articlesStore.currentArticle.id)
+    if (publishedArticle) {
+      articlesStore.currentArticle = publishedArticle
+    }
+  } catch (error) {
+    console.error('Ошибка публикации статьи:', error)
   }
 }
 
@@ -165,7 +200,6 @@ onMounted(async () => {
   }
 })
 
-// Синхронизация tagsInput с form.tags
 watch(tagsInput, (value) => {
   form.value.tags = value
     .split(',')
@@ -252,6 +286,59 @@ watch(tagsInput, (value) => {
   border-radius: 4px;
   margin-bottom: 1rem;
   font-size: 0.875rem;
+}
+
+.publish-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.publish-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.status-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-badge.published {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.draft {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.btn-publish {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  background: #28a745;
+  color: white;
+  transition: background 0.2s;
+}
+
+.btn-publish:hover:not(:disabled) {
+  background: #218838;
+}
+
+.btn-publish:disabled {
+  background: #ccc;
+  cursor: not-allowed;
 }
 
 .form-actions {

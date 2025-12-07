@@ -69,22 +69,16 @@ const canEdit = computed(() => {
     return false
   }
   
-  // Редакторы могут редактировать все статьи
   if (authStore.isEditor) {
     return true
   }
   
-  // Обычные пользователи могут редактировать только свои статьи
-  // Проверяем, загружен ли author
   if (!props.article.author) {
     return false
   }
   
-  // Сравниваем ID (могут быть разных типов - number или string)
-  // author.id может быть объектом, числом или строкой
   let authorId: number
   if (props.article.author.id && typeof props.article.author.id === 'object') {
-    // Если это объект (например, { id: 1 }), берем значение
     authorId = Number((props.article.author.id as any).id || Object.values(props.article.author.id)[0])
   } else {
     authorId = Number(props.article.author.id)
@@ -92,7 +86,6 @@ const canEdit = computed(() => {
   
   const userId = Number(authStore.user.id)
   
-  // Только если ID совпадают, пользователь может редактировать
   return authorId === userId
 })
 
@@ -105,14 +98,19 @@ const handleArticleClick = () => {
   console.log('=== Article Click Debug ===')
   console.log('Article:', props.article)
   console.log('Article ID:', props.article.id)
+  console.log('Article documentId:', (props.article as any).documentId)
+  console.log('Article publicationState:', (props.article as any).publicationState)
+  console.log('Article publishedAt:', props.article.publishedAt)
+  console.log('Article title:', props.article.title)
   console.log('Article Author:', props.article.author)
   console.log('Article Author ID:', props.article.author?.id)
-  console.log('Article Author ID type:', typeof props.article.author?.id)
+  console.log('Article Author Username:', props.article.author?.username)
   console.log('Current User:', authStore.user)
   console.log('Current User ID:', authStore.user?.id)
-  console.log('Current User ID type:', typeof authStore.user?.id)
   console.log('Is Editor:', authStore.isEditor)
   console.log('Can Edit:', canEdit.value)
+  console.log('All article fields:', Object.keys(props.article))
+  console.log('Full article object:', JSON.stringify(props.article, null, 2))
   console.log('==========================')
 }
 
@@ -120,7 +118,6 @@ const handleDelete = async () => {
   if (confirm('Вы уверены, что хотите удалить эту статью? Это действие нельзя отменить.')) {
     try {
       await articlesStore.deleteArticle(props.article.id)
-      // Статья будет удалена из списка автоматически через store
     } catch (error) {
       console.error('Ошибка удаления статьи:', error)
       alert('Не удалось удалить статью. Возможно, у вас нет прав на это действие.')

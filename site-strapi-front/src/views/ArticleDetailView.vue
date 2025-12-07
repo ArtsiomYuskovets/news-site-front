@@ -45,14 +45,28 @@
         <div class="article-actions">
           <RouterLink to="/" class="btn-back">← Назад к списку</RouterLink>
 
-          <div v-if="canEdit" class="editor-actions">
-            <RouterLink
-              :to="`/article/${articlesStore.currentArticle.id}/edit`"
-              class="btn-edit"
-            >
-              Редактировать
-            </RouterLink>
-            <button @click="showDeleteDialog = true" class="btn-delete">Удалить</button>
+          <div v-if="canEdit || authStore.isEditor" class="editor-actions">
+            <div v-if="authStore.isEditor" class="publish-status">
+              <span v-if="isPublished" class="status-badge published">Опубликована</span>
+              <span v-else class="status-badge draft">Черновик</span>
+              <button
+                v-if="!isPublished"
+                @click="handlePublish"
+                :disabled="articlesStore.isLoading"
+                class="btn-publish"
+              >
+                {{ articlesStore.isLoading ? 'Публикация...' : 'Опубликовать' }}
+              </button>
+            </div>
+            <div v-if="canEdit" class="edit-actions">
+              <RouterLink
+                :to="`/article/${articlesStore.currentArticle.id}/edit`"
+                class="btn-edit"
+              >
+                Редактировать
+              </RouterLink>
+              <button @click="showDeleteDialog = true" class="btn-delete">Удалить</button>
+            </div>
           </div>
         </div>
       </article>
@@ -94,17 +108,12 @@ const showDeleteDialog = ref(false)
 const canEdit = computed(() => {
   if (!authStore.isAuthenticated || !authStore.user || !articlesStore.currentArticle) return false
   
-  // Редакторы могут редактировать все статьи
   if (authStore.isEditor) return true
   
-  // Обычные пользователи могут редактировать только свои статьи
   if (!articlesStore.currentArticle.author) return false
   
-  // Сравниваем ID (могут быть разных типов - number или string)
-  // author.id может быть объектом, числом или строкой
   let authorId: number
   if (articlesStore.currentArticle.author.id && typeof articlesStore.currentArticle.author.id === 'object') {
-    // Если это объект (например, { id: 1 }), берем значение
     authorId = Number((articlesStore.currentArticle.author.id as any).id || Object.values(articlesStore.currentArticle.author.id)[0])
   } else {
     authorId = Number(articlesStore.currentArticle.author.id)
@@ -114,6 +123,24 @@ const canEdit = computed(() => {
   
   return authorId === userId
 })
+
+const isPublished = computed(() => {
+  const publishedAt = articlesStore.currentArticle?.publishedAt
+  return publishedAt !== null && publishedAt !== undefined && publishedAt !== ''
+})
+
+const handlePublish = async () => {
+  if (!articlesStore.currentArticle) return
+  
+  try {
+    const publishedArticle = await articlesStore.publishArticle(articlesStore.currentArticle.id)
+    if (publishedArticle) {
+      articlesStore.currentArticle = publishedArticle
+    }
+  } catch (error) {
+    console.error('Ошибка публикации статьи:', error)
+  }
+}
 
 const getImageUrl = (url: string): string => {
   if (url.startsWith('http')) return url
@@ -261,6 +288,56 @@ onUnmounted(() => {
 }
 
 .editor-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.publish-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.status-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-badge.published {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.draft {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.btn-publish {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  background: #28a745;
+  color: white;
+  transition: background 0.2s;
+}
+
+.btn-publish:hover:not(:disabled) {
+  background: #218838;
+}
+
+.btn-publish:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.edit-actions {
   display: flex;
   gap: 1rem;
 }
