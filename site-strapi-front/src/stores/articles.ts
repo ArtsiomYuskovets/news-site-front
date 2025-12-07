@@ -20,8 +20,10 @@ export const useArticlesStore = defineStore('articles', () => {
     error.value = null
 
     try {
+      console.log('[Articles Store] Fetching articles with filters:', filters)
       const response = await articlesApi.getArticles(filters)
       console.log('[Articles Store] API Response:', response)
+      console.log('[Articles Store] Articles count:', response.data?.length || 0)
       console.log('[Articles Store] First article:', response.data?.[0])
       console.log('[Articles Store] First article author:', response.data?.[0]?.author)
       articles.value = response.data || []
@@ -30,7 +32,6 @@ export const useArticlesStore = defineStore('articles', () => {
       const currentPage = filters?.pagination?.page || 1
       
       if (response.meta?.pagination) {
-        // Используем pagination из ответа API
         pagination.value = {
           page: response.meta.pagination.page || currentPage,
           pageSize: response.meta.pagination.pageSize || pageSize,
@@ -38,24 +39,25 @@ export const useArticlesStore = defineStore('articles', () => {
           total: response.meta.pagination.total || 0,
         }
       } else {
-        // Если API не вернул pagination, вычисляем на основе количества статей
         const articlesCount = response.data?.length || 0
-        
-        // Если статей меньше pageSize, значит это последняя страница или единственная
-        // Если статей = pageSize, возможно есть еще страницы
         const hasMore = articlesCount === pageSize && currentPage === 1
         
         pagination.value = {
           page: currentPage,
           pageSize: pageSize,
-          // Если статей меньше pageSize, значит это последняя страница
           pageCount: articlesCount > 0 ? (hasMore ? 2 : currentPage) : 1,
           total: articlesCount,
         }
       }
     } catch (err: any) {
+      console.error('[Articles Store] Error fetching articles:', err)
+      console.error('[Articles Store] Error response:', err.response?.data)
       error.value = err.response?.data?.error?.message || 'Ошибка загрузки статей'
-      // При ошибке тоже сохраняем pagination
+      
+      if (err.response?.status === 401) {
+        console.warn('[Articles Store] 401 error - user may not be authenticated or lacks permissions')
+      }
+      
       if (!pagination.value) {
         pagination.value = {
           page: 1,
@@ -165,6 +167,33 @@ export const useArticlesStore = defineStore('articles', () => {
     }
   }
 
+  const publishArticle = async (id: string | number) => {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const article = await articlesApi.publishArticle(id)
+      
+      const articleId = Number(id)
+      
+      const index = articles.value.findIndex((a) => a.id === articleId)
+      if (index !== -1) {
+        articles.value[index] = { ...articles.value[index], ...article }
+      }
+      
+      if (currentArticle.value?.id === articleId) {
+        currentArticle.value = { ...currentArticle.value, ...article }
+      }
+      
+      return article
+    } catch (err: any) {
+      error.value = err.response?.data?.error?.message || 'Ошибка публикации статьи'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   const clearCurrentArticle = () => {
     currentArticle.value = null
   }
@@ -181,10 +210,7 @@ export const useArticlesStore = defineStore('articles', () => {
     createArticle,
     updateArticle,
     deleteArticle,
+    publishArticle,
     clearCurrentArticle,
   }
 })
-
-
-
-
