@@ -1,48 +1,113 @@
-# site-strapi-front
+# Новостной сайт - Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+Frontend приложение для новостного сайта на Vue 3 + Vite.
 
-## Recommended IDE Setup
+## Технологии
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- Vue 3 (Composition API)
+- TypeScript
+- Vite
+- Vue Router
+- Pinia
+- Axios
+- ESLint + Prettier
 
-## Recommended Browser Setup
+## Структура проекта
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+```
+src/
+  ├── api/          # API клиент для Strapi
+  ├── components/   # Переиспользуемые компоненты
+  │   ├── articles/    # Компоненты для статей
+  │   ├── common/      # Общие компоненты
+  │   └── layouts/     # Компоненты макета
+  ├── stores/       # Pinia stores (auth, articles, categories)
+  ├── types/        # TypeScript типы
+  ├── utils/        # Утилиты (JWT, валидация, форматирование)
+  ├── views/        # Страницы приложения
+  └── router/       # Конфигурация роутера
+```
 
-## Type Support for `.vue` Imports in TS
+## Установка и запуск
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+### Локальная разработка
 
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+```bash
+# Установка зависимостей
 npm install
-```
 
-### Compile and Hot-Reload for Development
-
-```sh
+# Запуск dev сервера
 npm run dev
-```
 
-### Type-Check, Compile and Minify for Production
-
-```sh
+# Сборка для production
 npm run build
+
+# Предпросмотр production сборки
+npm run preview
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+### Переменные окружения
 
-```sh
+Создайте файл `.env`:
+
+```env
+VITE_STRAPI_URL=http://localhost:1337
+```
+
+## Функциональность
+
+### Аутентификация
+- Регистрация пользователей
+- Вход в систему
+- Хранение JWT токена
+- Защита маршрутов
+
+### Статьи
+- Просмотр списка статей с пагинацией
+- Фильтрация по категориям
+- Фильтрация избранных статей
+- Сортировка (по дате, популярности)
+- Детальный просмотр статьи
+- Создание/редактирование статей (для авторизованных)
+- Удаление статей (только для редакторов)
+
+### RBAC
+- Проверка ролей на клиенте
+- Условный рендеринг элементов UI
+- Защита маршрутов по ролям
+
+## API Endpoints
+
+Приложение использует следующие endpoints Strapi:
+
+- `GET /api/articles` - список статей
+- `GET /api/articles/:id` - детали статьи
+- `GET /api/articles/featured` - избранные статьи
+- `POST /api/articles` - создание статьи
+- `PUT /api/articles/:id` - обновление статьи
+- `DELETE /api/articles/:id` - удаление статьи
+- `POST /api/articles/:id/publish` - публикация статьи
+- `GET /api/categories` - список категорий
+- `POST /api/auth/local` - вход
+- `POST /api/auth/local/register` - регистрация
+- `GET /api/users/me` - текущий пользователь
+
+## Docker
+
+```bash
+# Сборка образа
+docker build -t news-site-front .
+
+# Запуск контейнера
+docker run -p 3000:3000 news-site-front
+```
+
+## Линтинг и форматирование
+
+```bash
+# Проверка кода
 npm run lint
+
+# Форматирование кода
+npm run format
 ```
