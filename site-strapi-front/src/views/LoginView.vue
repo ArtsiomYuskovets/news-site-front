@@ -61,10 +61,13 @@ const form = ref({
 const handleSubmit = async () => {
   try {
     await authStore.login(form.value)
+    console.log('[LoginView] Login successful, redirecting...')
     const redirect = (route.query.redirect as string) || '/'
-    router.push(redirect)
+    console.log('[LoginView] Redirect to:', redirect)
+    await router.push(redirect)
+    console.log('[LoginView] Redirected successfully')
   } catch (error) {
-    // Ошибка уже обработана в store
+    console.error('[LoginView] Login error:', error)
   }
 }
 </script>

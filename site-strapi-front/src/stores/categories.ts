@@ -13,10 +13,19 @@ export const useCategoriesStore = defineStore('categories', () => {
     error.value = null
 
     try {
+      console.log('[Categories Store] Fetching categories...')
       const response = await categoriesApi.getCategories()
+      console.log('[Categories Store] Categories fetched:', response.data?.length || 0)
       categories.value = response.data
     } catch (err: any) {
+      console.error('[Categories Store] Error fetching categories:', err)
+      console.error('[Categories Store] Error response:', err.response?.data)
       error.value = err.response?.data?.error?.message || 'Ошибка загрузки категорий'
+      
+      if (err.response?.status === 401) {
+        console.warn('[Categories Store] 401 error - user may not be authenticated or lacks permissions')
+      }
+      
       throw err
     } finally {
       isLoading.value = false
