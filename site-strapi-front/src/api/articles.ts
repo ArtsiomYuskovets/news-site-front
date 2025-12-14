@@ -1,5 +1,8 @@
 import strapiClient from './strapi'
+import axios from 'axios'
 import type { Article, ArticleListResponse, ArticleFilters } from '@/types/article'
+
+const API_URL = import.meta.env.VITE_STRAPI_URL || 'http://localhost:1337'
 
 export const articlesApi = {
   async getArticles(params?: ArticleFilters): Promise<ArticleListResponse> {
@@ -79,6 +82,19 @@ export const articlesApi = {
   async publishArticle(id: string | number): Promise<Article> {
     const { data } = await strapiClient.post<{ data: Article }>(`/api/articles/${id}/publish`)
     return data.data
+  },
+
+  async incrementViews(id: string | number): Promise<{ views: number }> {
+    const { data } = await axios.post<{ views: number }>(
+      `${API_URL}/api/articles/${id}/view`,
+      {},
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+    return data
   },
 }
 
