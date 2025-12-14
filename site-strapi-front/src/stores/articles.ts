@@ -194,6 +194,38 @@ export const useArticlesStore = defineStore('articles', () => {
     }
   }
 
+  const incrementViews = async (id: string | number) => {
+    try {
+      const response = await articlesApi.incrementViews(id)
+      const articleId = Number(id)
+      const newViews = response.views
+
+      const index = articles.value.findIndex((a) => a.id === articleId)
+      if (index !== -1) {
+        articles.value[index] = { ...articles.value[index], views: newViews }
+      }
+
+      if (currentArticle.value?.id === articleId) {
+        currentArticle.value = { ...currentArticle.value, views: newViews }
+      }
+      
+      return { views: newViews }
+    } catch (err: any) {
+      if (err.response?.status === 403) {
+        console.warn('[Articles Store] 403 error - permissions not configured. Please set up permissions in Strapi Admin for POST /api/articles/:id/view endpoint')
+        console.warn('[Articles Store] See PERMISSIONS_SETUP.md for instructions')
+      } else {
+        console.error('[Articles Store] Error incrementing views:', err)
+      }
+
+      const articleId = Number(id)
+      if (currentArticle.value?.id === articleId && currentArticle.value.views !== undefined) {
+        currentArticle.value.views = (currentArticle.value.views || 0) + 1
+      }
+      return null
+    }
+  }
+
   const clearCurrentArticle = () => {
     currentArticle.value = null
   }
@@ -211,6 +243,7 @@ export const useArticlesStore = defineStore('articles', () => {
     updateArticle,
     deleteArticle,
     publishArticle,
+    incrementViews,
     clearCurrentArticle,
   }
 })
