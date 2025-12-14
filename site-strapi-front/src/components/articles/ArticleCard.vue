@@ -12,7 +12,7 @@
       <div class="article-content">
         <div class="article-meta">
           <span v-if="article.category" class="category">{{ article.category.name }}</span>
-          <span class="date">{{ formatDate(article.publishedAt) }}</span>
+          <span v-if="article.publishedAt" class="date">{{ formatDate(article.publishedAt) }}</span>
           <span v-if="article.readingTime" class="reading-time">{{ article.readingTime }} мин</span>
         </div>
 
