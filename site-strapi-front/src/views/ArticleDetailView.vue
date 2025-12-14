@@ -16,7 +16,7 @@
             <span v-if="articlesStore.currentArticle.category" class="category">
               {{ articlesStore.currentArticle.category.name }}
             </span>
-            <span class="date">
+            <span v-if="articlesStore.currentArticle.publishedAt" class="date">
               {{ formatDate(articlesStore.currentArticle.publishedAt) }}
             </span>
             <span v-if="articlesStore.currentArticle.readingTime" class="reading-time">
@@ -159,6 +159,10 @@ const handleDelete = async () => {
 
 onMounted(async () => {
   await articlesStore.fetchArticle(route.params.id as string)
+  // Увеличиваем просмотры при открытии статьи
+  if (articlesStore.currentArticle) {
+    await articlesStore.incrementViews(route.params.id as string)
+  }
 })
 
 onUnmounted(() => {
