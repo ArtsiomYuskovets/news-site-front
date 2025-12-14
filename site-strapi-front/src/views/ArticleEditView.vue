@@ -68,6 +68,19 @@
             </div>
           </div>
 
+          <div v-if="isEdit && authStore.isEditor" class="form-group">
+            <label for="views">Просмотры</label>
+            <input
+              id="views"
+              v-model.number="form.views"
+              type="number"
+              min="0"
+              class="form-input"
+              placeholder="0"
+            />
+            <small class="form-hint">Количество просмотров статьи (только для редакторов при редактировании)</small>
+          </div>
+
           <div class="form-group">
             <label for="tags">Теги (через запятую)</label>
             <input
@@ -139,6 +152,7 @@ const form = ref({
   category: '',
   isFeatured: false,
   tags: [] as string[],
+  views: 0,
 })
 
 const tagsInput = ref('')
@@ -155,6 +169,15 @@ const handleSubmit = async () => {
 
     if (form.value.category) {
       articleData.category = Number(form.value.category)
+    }
+
+ 
+    if (isEdit.value) {
+      if (authStore.isEditor) {
+        articleData.views = form.value.views || 0
+      }
+    } else {
+      articleData.views = 0
     }
 
     if (isEdit.value) {
@@ -196,6 +219,7 @@ onMounted(async () => {
       form.value.tags = article.tags || []
       tagsInput.value = article.tags?.join(', ') || ''
       form.value.category = article.category?.id.toString() || ''
+      form.value.views = article.views || 0
     }
   }
 })
@@ -277,6 +301,13 @@ watch(tagsInput, (value) => {
 
 .form-checkbox {
   margin-right: 0.5rem;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #666;
 }
 
 .error-message {
