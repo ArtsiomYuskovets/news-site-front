@@ -17,7 +17,7 @@ export const authApi = {
       
       if (data.user && !data.user.role) {
         try {
-          const jwtPayload = JSON.parse(atob(data.jwt.split('.')[1]))
+          const jwtPayload = JSON.parse(atob(data.jwt.split('.')[1] as string))
           console.log('[Auth API] JWT payload:', jwtPayload)
           
           if (jwtPayload.id) {
